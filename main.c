@@ -14,6 +14,7 @@ int tapeLength = 4800000; // 100 secs
 int track_count = 3;
 int current_track = 0;
 struct track *tracks[10];
+int loop = 1;
 const char *name = "simple";
 
 void fatal(const char *fmt, ...)
@@ -89,6 +90,78 @@ static void display()
         refresh();
 }
 
+static int command(int key)
+{
+        // Returns 0 on success, 1 when user wants to exit
+
+        static enum {NORMAL, SET_MARK, GOTO_MARK} mode = NORMAL;
+        static int mark[26];
+        static int where;
+
+        if (mode==NORMAL) {
+                switch (key) {
+                case KEY_DOWN:
+                        if (current_track<track_count-1) ++current_track;
+                        break;
+                case KEY_UP:
+                        if (current_track>0) --current_track;
+                        break;
+                case ' ':
+                        if (jack_transport_query(client, NULL)==JackTransportStopped)
+                                jack_transport_start(client);
+                        else
+                                jack_transport_stop(client);
+                        break;
+                case 'z':
+                        jack_transport_locate(client, 0);
+                        break;
+                case 'r':
+                        tracks[current_track]->flags ^= TRACK_REC;
+                        break;
+                case 'm':
+                        tracks[current_track]->flags ^= TRACK_MUTE;
+                        break;
+                case 's':
+                        tracks[current_track]->flags ^= TRACK_SOLO;
+                        break;
+                case '-':
+                        tracks[current_track]->vol -= 0.1;
+                        if (tracks[current_track]->vol<=0.0) tracks[current_track]->vol = 0.0;
+                        break;
+                case '=':
+                        tracks[current_track]->vol += 0.1;
+                        if (tracks[current_track]->vol>=9.9) tracks[current_track]->vol = 9.9;
+                        break;
+                case ',':
+                        tracks[current_track]->pan -= 0.1;
+                        if (tracks[current_track]->pan<=0.0) tracks[current_track]->pan = 0.0;
+                        break;
+                case '.':
+                        tracks[current_track]->pan += 0.1;
+                        if (tracks[current_track]->pan>=1.0) tracks[current_track]->pan = 1.0;
+                        break;
+                case 'p':
+                        mode = SET_MARK;
+                        jack_position_t pos;
+                        jack_transport_query(client, &pos);
+                        where = pos.frame;
+                        break;
+                case '\'':
+                        mode = GOTO_MARK;
+                        break;
+                case 'q':
+                        return 1;
+                }
+        } else if (mode==SET_MARK) {
+                if (key>='a' && key<='z') mark[key-'a'] = where;
+                mode = NORMAL;
+        } else if (mode==GOTO_MARK) {
+                if (key>='a' && key<='z') jack_transport_locate(client, mark[key-'a']);
+                mode = NORMAL;
+        }
+        return 0;
+}
+
 int main(int argc, char *argv[])
 {
         initscr();
@@ -135,57 +208,12 @@ int main(int argc, char *argv[])
 
         if (jack_activate(client)) fatal("cannot activate client");
 
-        int ch;
-        int loop = 1;
         int t;
         while (loop) {
                 display();
-
-                switch (getch()) {
-                case KEY_DOWN:
-                        if (current_track<track_count-1) ++current_track;
-                        break;
-                case KEY_UP:
-                        if (current_track>0) --current_track;
-                        break;
-                case ' ':
-                        if (jack_transport_query(client, NULL)==JackTransportStopped)
-                                jack_transport_start(client);
-                        else
-                                jack_transport_stop(client);
-                        break;
-                case 'z':
-                        jack_transport_locate(client, 0);
-                        break;
-                case 'r':
-                        tracks[current_track]->flags ^= TRACK_REC;
-                        break;
-                case 'm':
-                        tracks[current_track]->flags ^= TRACK_MUTE;
-                        break;
-                case 's':
-                        tracks[current_track]->flags ^= TRACK_SOLO;
-                        break;
-                case '-':
-                        tracks[current_track]->vol -= 0.1;
-                        if (tracks[current_track]->vol<=0.0) tracks[current_track]->vol = 0.0;
-                        break;
-                case '=':
-                        tracks[current_track]->vol += 0.1;
-                        if (tracks[current_track]->vol>=9.9) tracks[current_track]->vol = 9.9;
-                        break;
-                case ',':
-                        tracks[current_track]->pan -= 0.1;
-                        if (tracks[current_track]->pan<=0.0) tracks[current_track]->pan = 0.0;
-                        break;
-                case '.':
-                        tracks[current_track]->pan += 0.1;
-                        if (tracks[current_track]->pan>=1.0) tracks[current_track]->pan = 1.0;
-                        break;
-                case 'q':
-                        loop = 0;
-                        break;
-                }
+                int ch = getch();
+                if (ch!=ERR)
+                        if (command(ch)) break;
         }
 
         jack_deactivate(client);
