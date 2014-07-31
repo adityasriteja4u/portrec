@@ -12,6 +12,7 @@ jack_port_t *master_port[2];
 
 int tapeLength = 4800000; // 100 secs
 int track_count = 3;
+int current_track = 0;
 struct track *tracks[10];
 const char *name = "simple";
 
@@ -64,13 +65,37 @@ void jack_shutdown(void *arg)
         exit(1);
 }
 
+static void display()
+{
+        int t;
+        for (t = 0; t<track_count; ++t) {
+                //              -> R  M  S  vol   pan  name
+                mvprintw(t+1, 0, "%s %s %s %s %4.2f %4.2f  %s",
+                         current_track==t?"->":"  ",
+                         tracks[t]->flags&TRACK_REC ?"R":" ",
+                         tracks[t]->flags&TRACK_MUTE?"M":" ",
+                         tracks[t]->flags&TRACK_SOLO?"S":" ",
+                         tracks[t]->vol,
+                         tracks[t]->pan,
+                         tracks[t]->name);
+
+                jack_position_t pos;
+                switch (jack_transport_query(client, &pos)) {
+                case JackTransportRolling: mvprintw(0, 0, "rolling"); break;
+                case JackTransportStopped: mvprintw(0, 0, "stopped"); break;
+                }
+                mvprintw(0, 10, "%5.1f s", (double)pos.frame/pos.frame_rate);
+        }
+        refresh();
+}
+
 int main(int argc, char *argv[])
 {
         initscr();
         cbreak();
         keypad(stdscr, TRUE);
         noecho();
-        timeout(-1);
+        timeout(50);
 
         const char **ports;
         const char *server_name = NULL;
@@ -113,20 +138,8 @@ int main(int argc, char *argv[])
         int ch;
         int loop = 1;
         int t;
-        int current_track = 0;
         while (loop) {
-                for (t = 0; t<track_count; ++t) {
-                        //              -> R  M  S  vol   pan  name
-                        mvprintw(t, 0, "%s %s %s %s %4.2f %4.2f  %s",
-                                 current_track==t?"->":"  ",
-                                 tracks[t]->flags&TRACK_REC ?"R":" ",
-                                 tracks[t]->flags&TRACK_MUTE?"M":" ",
-                                 tracks[t]->flags&TRACK_SOLO?"S":" ",
-                                 tracks[t]->vol,
-                                 tracks[t]->pan,
-                                 tracks[t]->name);
-                }
-                refresh();
+                display();
 
                 switch (getch()) {
                 case KEY_DOWN:
