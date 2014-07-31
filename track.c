@@ -58,23 +58,21 @@ void process_track(struct track *track,
                    int pos_max,
                    jack_transport_state_t transport)
 {
-        jack_default_audio_sample_t *p = track->tape + pos->frame;
         jack_nframes_t i;
         int j = pos->frame;
         if (transport!=JackTransportRolling || track->flags&TRACK_MUTE) {
-                for (i = 0; i<track->nframes; ++i) *track->out_buf++ = 0.0;
+                for (i = 0; i<track->nframes; ++i) track->out_buf[i] = 0.0;
         } else if (track->flags&TRACK_REC) {
-                p -= offset;
                 j -= offset;
                 for (i = 0; i<track->nframes; ++i) {
-                        if (j>=pos_min && j<pos_max) *p++ = *track->in_buf++;
-                        *track->out_buf++ = 0.0;
+                        if (j>=pos_min && j<pos_max) track->tape[j] = track->in_buf[i];
+                        track->out_buf[i] = 0.0;
                         j++;
                 }
         } else {
                 for (i = 0; i<track->nframes; ++i) {
-                        if (j>=pos_min && j<pos_max) *track->out_buf++ = *p++;
-                        else *track->out_buf++ = 0.0;
+                        if (j>=pos_min && j<pos_max) track->out_buf[i] = track->tape[j];
+                        else track->out_buf[i] = 0.0;
                         j++;
                 }
         }
@@ -86,8 +84,7 @@ void mix_track_to_master(struct track *track,
 {
         jack_nframes_t i;
         for (i = 0; i<track->nframes; ++i) {
-                *L++ += 2.0 * (1.0-track->pan) * track->vol * *track->in_buf;
-                *R++ += 2.0 *      track->pan  * track->vol * *track->in_buf;
-                ++track->in_buf;
+                *L++ += (1.0-track->pan) * track->vol * track->out_buf[i];
+                *R++ +=      track->pan  * track->vol * track->out_buf[i];
         }
 }
