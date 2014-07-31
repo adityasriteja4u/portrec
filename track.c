@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <sndfile.h>
 #include <stdlib.h>
 #include <string.h>
 #include "track.h"
@@ -45,9 +45,27 @@ void delete_track(jack_client_t *client, struct track *track)
 
 void export_track(struct track *track, const char *filename, int length)
 {
-        FILE *f = fopen(filename, "w");
-        fwrite(track->tape, sizeof(jack_default_audio_sample_t), length, f);
-        fclose(f);
+        SNDFILE *f;
+        SF_INFO info;
+        jack_default_audio_sample_t i;
+
+        memset(&info, 0, sizeof(info));
+        info.samplerate = 48000;
+        info.channels = 1;
+        info.format = SF_FORMAT_FLAC | SF_FORMAT_PCM_16;
+        /* Also possible formats:
+         *   SF_FORMAT_FLAC | SF_FORMAT_PCM_S8
+         *   SF_FORMAT_FLAC | SF_FORMAT_PCM_16
+         *   SF_FORMAT_FLAC | SF_FORMAT_PCM_24
+         *   SF_FORMAT_OGG  | SF_FORMAT_VORBIS
+         */
+
+        f = sf_open(filename, SFM_WRITE, &info);
+        if (f==NULL)
+                fatal("couldn't open file %s\n", filename);
+        if (sf_writef_float(f, track->tape, length)!=length)
+                fatal("couldn't write to file %s\n", filename);
+        sf_close(f);
 
 }
 
