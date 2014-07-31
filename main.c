@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
         }
         if (status & JackNameNotUnique) {
                 name = jack_get_client_name(client);
-                fatal("unique name `%s' assigned\n", name);
+                fprintf(stderr, "unique name `%s' assigned\n", name);
         }
 
         master_port[0] = jack_port_register(client, "master:l",
