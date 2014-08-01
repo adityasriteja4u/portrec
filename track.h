@@ -22,6 +22,10 @@ struct track
         double pan; // 0.0=L 1.0=R
         int flags;
 
+        // meters [dB, clipping=0 dB]; updated in process_track()
+        float in_meter;
+        float out_meter;
+
         // buffers (only valid during inside process callback)
         jack_nframes_t nframes;
         jack_default_audio_sample_t *in_buf;
@@ -30,7 +34,10 @@ struct track
 
 struct track *new_track(jack_client_t *client, const char *name, int length,
                         const char *inport, const char *outport);
+
 void delete_track(jack_client_t *client, struct track *track);
+
+void export_track(struct track *track, const char *filename, int length);
 
 void process_track(struct track *track,
                    int offset,

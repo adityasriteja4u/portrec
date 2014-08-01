@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "track.h"
+#include "meter.h"
 
 void fatal(const char *fmt, ...);
 
@@ -94,6 +95,15 @@ void process_track(struct track *track,
                         j++;
                 }
         }
+
+        // update the meters
+        float in  = signal_power(track->in_buf,  track->nframes);
+        float out = signal_power(track->out_buf, track->nframes);
+        float decay = meters_decay * track->nframes / pos->frame_rate;
+        track->in_meter  -= decay;
+        track->out_meter -= decay;
+        if (in>track->in_meter)   track->in_meter  = in;
+        if (out>track->out_meter) track->out_meter = out;
 }
 
 void mix_track_to_master(struct track *track,

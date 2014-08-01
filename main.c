@@ -6,6 +6,7 @@
 #include <jack/jack.h>
 
 #include "track.h"
+#include "meter.h"
 
 jack_client_t *client;
 jack_port_t *master_port[2];
@@ -41,7 +42,6 @@ int process(jack_nframes_t nframes, void *arg)
         for (i = 0; i<nframes; ++i) { L[i] = 0.0; R[i] = 0.0; }
 
         for (t = 0; t<track_count; ++t) {
-                int j;
                 jack_latency_range_t latency;
 
                 jack_port_get_latency_range(tracks[t]->input_port, JackCaptureLatency, &latency);
@@ -71,7 +71,7 @@ static void display()
         int t;
         for (t = 0; t<track_count; ++t) {
                 //              -> R  M  S  vol   pan  name
-                mvprintw(t+1, 0, "%s %s %s %s %4.2f %4.2f  %s",
+                mvprintw(t+1, 0, "%s %s %s %s %4.2f %4.2f  %10s",
                          current_track==t?"->":"  ",
                          tracks[t]->flags&TRACK_REC ?"R":" ",
                          tracks[t]->flags&TRACK_MUTE?"M":" ",
@@ -80,10 +80,13 @@ static void display()
                          tracks[t]->pan,
                          tracks[t]->name);
 
+                display_meter(t+1, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter);
+
                 jack_position_t pos;
                 switch (jack_transport_query(client, &pos)) {
                 case JackTransportRolling: mvprintw(0, 0, "rolling"); break;
                 case JackTransportStopped: mvprintw(0, 0, "stopped"); break;
+                default: break;
                 }
                 mvprintw(0, 10, "%5.1f s", (double)pos.frame/pos.frame_rate);
         }
@@ -169,8 +172,11 @@ int main(int argc, char *argv[])
         keypad(stdscr, TRUE);
         noecho();
         timeout(50);
+        start_color();
+        init_pair(1, COLOR_WHITE, COLOR_GREEN);
+        init_pair(2, COLOR_WHITE, COLOR_YELLOW);
+        init_pair(3, COLOR_WHITE, COLOR_RED);
 
-        const char **ports;
         const char *server_name = NULL;
         jack_options_t options = JackNullOption;
         jack_status_t status;
