@@ -48,7 +48,6 @@ void export_track(struct track *track, const char *filename, int length)
 {
         SNDFILE *f;
         SF_INFO info;
-        jack_default_audio_sample_t i;
 
         memset(&info, 0, sizeof(info));
         info.samplerate = 48000;
