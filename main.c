@@ -224,9 +224,10 @@ int main(int argc, char *argv[])
 
         jack_deactivate(client);
 
-        export_track(tracks[0], "/tmp/out1.flac", tapeLength);
-        export_track(tracks[1], "/tmp/out2.flac", tapeLength);
-        export_track(tracks[2], "/tmp/out3.flac", tapeLength);
+        for (t = 0; t<track_count; ++t) {
+                char filename[100] = "/tmp/";
+                export_track(tracks[t], strcat(strncat(filename, tracks[t]->name, 80),".flac"), tapeLength);
+        }
 
         for (t = 0; t<track_count; ++t) delete_track(client, tracks[t]);
         jack_port_unregister(client, master_port[0]);
