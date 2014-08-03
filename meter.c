@@ -19,21 +19,11 @@ float signal_power(jack_default_audio_sample_t *buf, jack_nframes_t nframes)
 void display_meter(int y, int x, float value)
 {
         int i;
+        int strips = (value+80.0)/10.0;
         mvaddstr(y, x, "          ");
         move(y, x);
-        attron(COLOR_PAIR(1));
-        for (i = 0; -80.0+i*10.0<=value; ++i) {
-                if (i==4) {
-                        attroff(COLOR_PAIR(1));
-                        attron(COLOR_PAIR(2));
-                }
-                if (i==7) {
-                        attroff(COLOR_PAIR(2));
-                        attron(COLOR_PAIR(3));
-                }
-                addch('|');
-        }
-        attroff(COLOR_PAIR(1));
-        attroff(COLOR_PAIR(2));
-        attroff(COLOR_PAIR(3));
+        for (i = 0; i<strips; ++i) addch('|');
+        mvchgat(y, x+0, 4, A_NORMAL, 1, NULL);
+        mvchgat(y, x+4, 3, A_NORMAL, 2, NULL);
+        mvchgat(y, x+7, 2, A_NORMAL, 3, NULL);
 }
