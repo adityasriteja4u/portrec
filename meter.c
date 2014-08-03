@@ -31,7 +31,7 @@ void display_meter(int y, int x, float value)
                         attroff(COLOR_PAIR(2));
                         attron(COLOR_PAIR(3));
                 }
-                addch(' ');
+                addch('|');
         }
         attroff(COLOR_PAIR(1));
         attroff(COLOR_PAIR(2));

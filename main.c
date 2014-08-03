@@ -173,9 +173,9 @@ int main(int argc, char *argv[])
         noecho();
         timeout(50);
         start_color();
-        init_pair(1, COLOR_WHITE, COLOR_GREEN);
-        init_pair(2, COLOR_WHITE, COLOR_YELLOW);
-        init_pair(3, COLOR_WHITE, COLOR_RED);
+        init_pair(1, COLOR_GREEN, COLOR_BLACK);
+        init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+        init_pair(3, COLOR_RED, COLOR_BLACK);
 
         const char *server_name = NULL;
         jack_options_t options = JackNullOption;
