@@ -11,7 +11,7 @@
 jack_client_t *client;
 jack_port_t *master_port[2];
 
-int tapeLength = 4800000; // 100 secs
+int tapeLength = 14400000; // 5 min
 int track_count = 3;
 int current_track = 0;
 struct track *tracks[10];
