@@ -81,7 +81,7 @@ static void display()
                          tracks[t]->name);
 
                 display_meter(t+1, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter,
-                              -48.0f, 16);
+                              48.0f, 16);
 
                 jack_position_t pos;
                 switch (jack_transport_query(client, &pos)) {
