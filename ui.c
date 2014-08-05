@@ -142,3 +142,8 @@ void main_loop(struct track **tracks, int track_count)
                 ch = getch();
         } while (ch==ERR?1:command(ch, tracks, track_count)==0);
 }
+
+void shutdown_ui()
+{
+        endwin();
+}
