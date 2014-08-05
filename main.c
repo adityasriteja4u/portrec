@@ -5,11 +5,9 @@
 #include <string.h>
 #include <jack/jack.h>
 
+#include "audio.h"
 #include "track.h"
 #include "ui.h"
-
-jack_client_t *client;
-jack_port_t *master_port[2];
 
 int tapeLength = 14400000; // 5 min
 int track_count = 3;

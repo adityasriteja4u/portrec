@@ -1,7 +1,9 @@
 #include <sndfile.h>
 #include <stdlib.h>
 #include <string.h>
+#include "audio.h"
 #include "track.h"
+#include "ui.h"
 
 void fatal(const char *fmt, ...);
 

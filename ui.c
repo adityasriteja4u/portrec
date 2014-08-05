@@ -1,19 +1,9 @@
 #include <ncurses.h>
+#include <jack/jack.h>
+#include "audio.h"
 #include "ui.h"
 
 float meters_decay = 100.0;
-
-float signal_power(jack_default_audio_sample_t *buf, jack_nframes_t nframes)
-{
-        float peak = 0.0;
-        jack_nframes_t i;
-        for (i = 0; i<nframes; ++i) {
-                float amplitude = fabsf(buf[i]);
-                if (amplitude>peak) peak = amplitude;
-        }
-
-        return 20.0 * log10(peak); // conversion to dB; reference value = 1.0
-}
 
 void display_meter(int y, int x, float value, float range, int width)
 {
@@ -28,12 +18,13 @@ void display_meter(int y, int x, float value, float range, int width)
         mvchgat(y, x+width-1, 1, A_NORMAL, 3, NULL);
 }
 
+static int current_track = 0;
+
 static int command(int key, struct track **tracks, int track_count)
 {
         // Returns 0 on success, 1 when user wants to exit
 
         static enum {NORMAL, SET_MARK, GOTO_MARK} mode = NORMAL;
-        static int current_track = 0;
         static int mark[26];
         static int where;
 
@@ -101,7 +92,7 @@ static int command(int key, struct track **tracks, int track_count)
         return 0;
 }
 
-static void display()
+static void display(struct track **tracks, int track_count)
 {
         int t;
         for (t = 0; t<track_count; ++t) {
@@ -145,8 +136,9 @@ int init_ui()
 
 void main_loop(struct track **tracks, int track_count)
 {
+        int ch;
         do {
-                display();
-                int ch = getch();
-        } while (ch!=ERR && command(ch, tracks, track_count)==0); // short-circuit condition
+                display(tracks, track_count);
+                ch = getch();
+        } while (ch==ERR?1:command(ch, tracks, track_count)==0);
 }
