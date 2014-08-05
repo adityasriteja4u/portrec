@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "track.h"
-#include "meter.h"
 
 void fatal(const char *fmt, ...);
 

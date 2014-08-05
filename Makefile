@@ -4,8 +4,8 @@ CC = gcc
 
 all: jackrec
 
-jackrec: main.o track.o meter.o
+jackrec: main.o track.o ui.o
 	$(CC) -Wall -o $@ $^ -lm -lpthread `pkg-config --libs jack sndfile ncurses`
 
-%.o: %.c track.h meter.h
+%.o: %.c track.h ui.h
 	$(CC) -Wall -c `pkg-config --cflags jack sndfile ncurses` -o $@ $<
