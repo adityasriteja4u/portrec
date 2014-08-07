@@ -44,10 +44,8 @@ void process_track(struct track *track,
                    const jack_position_t *pos,
                    int pos_min,
                    int pos_max,
-                   jack_transport_state_t transport);
-
-void mix_track_to_master(struct track *track,
-                         jack_default_audio_sample_t *L,
-                         jack_default_audio_sample_t *R);
+                   jack_transport_state_t transport,
+                   jack_default_audio_sample_t *L,
+                   jack_default_audio_sample_t *R);
 
 #endif

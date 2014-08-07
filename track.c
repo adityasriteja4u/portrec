@@ -75,7 +75,9 @@ void process_track(struct track *track,
                    const jack_position_t *pos,
                    int pos_min,
                    int pos_max,
-                   jack_transport_state_t transport)
+                   jack_transport_state_t transport,
+                   jack_default_audio_sample_t *L,
+                   jack_default_audio_sample_t *R)
 {
         jack_nframes_t i;
         int j = pos->frame;
@@ -104,13 +106,8 @@ void process_track(struct track *track,
         track->out_meter -= decay;
         if (in>track->in_meter)   track->in_meter  = in;
         if (out>track->out_meter) track->out_meter = out;
-}
 
-void mix_track_to_master(struct track *track,
-                         jack_default_audio_sample_t *L,
-                         jack_default_audio_sample_t *R)
-{
-        jack_nframes_t i;
+        // mix track to master bus
         for (i = 0; i<track->nframes; ++i) {
                 *L++ += (1.0-track->pan) * track->vol * track->out_buf[i];
                 *R++ +=      track->pan  * track->vol * track->out_buf[i];
