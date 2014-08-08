@@ -98,7 +98,7 @@ void process_track(struct track *track,
                 }
         }
 
-        // update the meters
+        /* Update the meters */
         float in  = signal_power(track->in_buf,  track->nframes);
         float out = signal_power(track->out_buf, track->nframes);
         float decay = meters_decay * track->nframes / pos->frame_rate;
@@ -107,9 +107,17 @@ void process_track(struct track *track,
         if (in>track->in_meter)   track->in_meter  = in;
         if (out>track->out_meter) track->out_meter = out;
 
-        // mix track to master bus
-        for (i = 0; i<track->nframes; ++i) {
-                *L++ += (1.0-track->pan) * track->vol * track->out_buf[i];
-                *R++ +=      track->pan  * track->vol * track->out_buf[i];
+        /* Mix track into the master bus
+         *
+         * We're mixing track into the master bus if all are true:
+         *   - transport is rolling,
+         *   - track is not muted with respect to both MUTE and SOLO,
+         *   - track is not marked for recording.
+         */
+        if (transport==JackTransportRolling && !(track->flags&(TRACK_MUTE|TRACK_REC))) {
+                for (i = 0; i<track->nframes; ++i) {
+                        *L++ += (1.0-track->pan) * track->vol * track->out_buf[i];
+                        *R++ +=      track->pan  * track->vol * track->out_buf[i];
+                }
         }
 }
