@@ -19,15 +19,10 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
         track->input_port =  jack_port_register(client, inport,
                                                 JACK_DEFAULT_AUDIO_TYPE,
                                                 JackPortIsInput, 0);
-        track->output_port = jack_port_register(client, outport,
-                                                JACK_DEFAULT_AUDIO_TYPE,
-                                                JackPortIsOutput, 0);
 
         track->in_buf  = NULL;
-        track->out_buf = NULL;
 
-        if ((track->input_port==NULL) || (track->output_port==NULL))
-                fatal("no more JACK ports available\n");
+        if (track->input_port==NULL) fatal("no more JACK ports available\n");
 
         track->vol = 1.0;
         track->pan = 0.5;
@@ -39,7 +34,6 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
 void delete_track(jack_client_t *client, struct track *track)
 {
         jack_port_unregister(client, track->input_port);
-        jack_port_unregister(client, track->output_port);
         free(track->tape);
         free(track->name);
         free(track);
@@ -81,26 +75,17 @@ void process_track(struct track *track,
 {
         jack_nframes_t i;
         int j = pos->frame;
-        if (transport!=JackTransportRolling || track->flags&TRACK_MUTE) {
-                for (i = 0; i<track->nframes; ++i) track->out_buf[i] = 0.0;
-        } else if (track->flags&TRACK_REC) {
+        if (transport==JackTransportRolling && track->flags&TRACK_REC) {
                 j -= offset;
                 for (i = 0; i<track->nframes; ++i) {
                         if (j>=pos_min && j<pos_max) track->tape[j] = track->in_buf[i];
-                        track->out_buf[i] = 0.0;
-                        j++;
-                }
-        } else {
-                for (i = 0; i<track->nframes; ++i) {
-                        if (j>=pos_min && j<pos_max) track->out_buf[i] = track->tape[j];
-                        else track->out_buf[i] = 0.0;
                         j++;
                 }
         }
 
         /* Update the meters */
-        float in  = signal_power(track->in_buf,  track->nframes);
-        float out = signal_power(track->out_buf, track->nframes);
+        float in  = signal_power(track->in_buf, track->nframes);
+        float out = signal_power(track->tape+pos->frame, track->nframes);
         float decay = meters_decay * track->nframes / pos->frame_rate;
         track->in_meter  -= decay;
         track->out_meter -= decay;
@@ -116,8 +101,8 @@ void process_track(struct track *track,
          */
         if (transport==JackTransportRolling && !(track->flags&(TRACK_MUTE|TRACK_REC))) {
                 for (i = 0; i<track->nframes; ++i) {
-                        *L++ += (1.0-track->pan) * track->vol * track->out_buf[i];
-                        *R++ +=      track->pan  * track->vol * track->out_buf[i];
+                        *L++ += (1.0-track->pan) * track->vol * track->tape[pos->frame+i];
+                        *R++ +=      track->pan  * track->vol * track->tape[pos->frame+i];
                 }
         }
 }

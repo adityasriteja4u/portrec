@@ -16,7 +16,6 @@ struct track
         char *name;
         int length;
         jack_port_t *input_port;
-        jack_port_t *output_port;
         jack_default_audio_sample_t *tape;
         double vol;
         double pan; // 0.0=L 1.0=R
@@ -29,7 +28,6 @@ struct track
         // buffers (only valid during inside process callback)
         jack_nframes_t nframes;
         jack_default_audio_sample_t *in_buf;
-        jack_default_audio_sample_t *out_buf;
 };
 
 struct track *new_track(jack_client_t *client, const char *name, int length,
