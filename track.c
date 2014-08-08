@@ -66,7 +66,6 @@ void export_track(struct track *track, const char *filename, int length)
 
 void process_track(struct track *track,
                    int offset,
-                   const jack_position_t *pos,
                    int pos_min,
                    int pos_max,
                    jack_transport_state_t transport,
@@ -74,7 +73,7 @@ void process_track(struct track *track,
                    jack_default_audio_sample_t *R)
 {
         jack_nframes_t i;
-        int j = pos->frame;
+        int j = frame;
         if (transport==JackTransportRolling && track->flags&TRACK_REC) {
                 j -= offset;
                 for (i = 0; i<track->nframes; ++i) {
@@ -85,8 +84,8 @@ void process_track(struct track *track,
 
         /* Update the meters */
         float in  = signal_power(track->in_buf, track->nframes);
-        float out = signal_power(track->tape+pos->frame, track->nframes);
-        float decay = meters_decay * track->nframes / pos->frame_rate;
+        float out = signal_power(track->tape+frame, track->nframes);
+        float decay = meters_decay * track->nframes / frame_rate;
         track->in_meter  -= decay;
         track->out_meter -= decay;
         if (in>track->in_meter)   track->in_meter  = in;
@@ -101,8 +100,8 @@ void process_track(struct track *track,
          */
         if (transport==JackTransportRolling && !(track->flags&(TRACK_MUTE|TRACK_REC))) {
                 for (i = 0; i<track->nframes; ++i) {
-                        *L++ += (1.0-track->pan) * track->vol * track->tape[pos->frame+i];
-                        *R++ +=      track->pan  * track->vol * track->tape[pos->frame+i];
+                        *L++ += (1.0-track->pan) * track->vol * track->tape[frame+i];
+                        *R++ +=      track->pan  * track->vol * track->tape[frame+i];
                 }
         }
 }

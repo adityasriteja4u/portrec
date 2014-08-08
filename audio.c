@@ -29,8 +29,7 @@ static int process(jack_nframes_t nframes, void *arg)
 {
         int t;
         jack_nframes_t i;
-        jack_position_t pos;
-        jack_transport_state_t transport = jack_transport_query(client, &pos);
+        update_transport_information();
 
         jack_default_audio_sample_t *L, *R;
         L = jack_port_get_buffer(master_port[0], nframes);
@@ -46,7 +45,7 @@ static int process(jack_nframes_t nframes, void *arg)
                 tracks[t]->nframes = nframes;
                 tracks[t]->in_buf  = jack_port_get_buffer(tracks[t]->input_port,  nframes);
 
-                process_track(tracks[t], 3*latency.min, &pos, 0, tapeLength, transport, L, R);
+                process_track(tracks[t], 3*latency.min, 0, tapeLength, transport, L, R);
 
                 tracks[t]->in_buf  = NULL;
         }
@@ -88,4 +87,33 @@ void shutdown_audio()
         jack_port_unregister(client, master_port[1]);
 
         jack_client_close(client);
+}
+
+jack_nframes_t frame;
+jack_nframes_t frame_rate;
+enum transport transport;
+
+void update_transport_information()
+{
+        jack_position_t pos;
+
+        if (jack_transport_query(client, &pos)==JackTransportRolling)
+                transport = ROLLING;
+        else
+                transport = STOPPED;
+
+        frame = pos.frame;
+        frame_rate = pos.frame_rate;
+}
+
+void transport_start()
+{
+        jack_transport_start(client);
+        /* We don't know yet whether the transport is rolling or starting */
+}
+
+void transport_stop()
+{
+        jack_transport_stop(client);
+        transport = STOPPED;
 }

@@ -37,10 +37,8 @@ static int command(int key, struct track **tracks, int track_count)
                         if (current_track>0) --current_track;
                         break;
                 case ' ':
-                        if (jack_transport_query(client, NULL)==JackTransportStopped)
-                                jack_transport_start(client);
-                        else
-                                jack_transport_stop(client);
+                        if (transport==ROLLING) transport_stop();
+                        else transport_start();
                         break;
                 case 'z':
                         jack_transport_locate(client, 0);
@@ -72,9 +70,7 @@ static int command(int key, struct track **tracks, int track_count)
                         break;
                 case 'p':
                         mode = SET_MARK;
-                        jack_position_t pos;
-                        jack_transport_query(client, &pos);
-                        where = pos.frame;
+                        where = frame;
                         break;
                 case '\'':
                         mode = GOTO_MARK;
@@ -110,10 +106,9 @@ static void display(struct track **tracks, int track_count)
                               48.0f, 16);
 
                 jack_position_t pos;
-                switch (jack_transport_query(client, &pos)) {
-                case JackTransportRolling: mvprintw(0, 0, "rolling"); break;
-                case JackTransportStopped: mvprintw(0, 0, "stopped"); break;
-                default: break;
+                switch (transport) {
+                case ROLLING: mvprintw(0, 0, "rolling"); break;
+                case STOPPED: mvprintw(0, 0, "stopped"); break;
                 }
                 mvprintw(0, 10, "%5.1f s", (double)pos.frame/pos.frame_rate);
         }

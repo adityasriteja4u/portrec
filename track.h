@@ -39,7 +39,6 @@ void export_track(struct track *track, const char *filename, int length);
 
 void process_track(struct track *track,
                    int offset,
-                   const jack_position_t *pos,
                    int pos_min,
                    int pos_max,
                    jack_transport_state_t transport,
