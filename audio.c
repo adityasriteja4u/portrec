@@ -6,8 +6,8 @@
 #include "main.h"
 #include "track.h"
 
-jack_client_t *client;
-jack_port_t *master_port[2];
+static jack_client_t *client;
+static jack_port_t *master_port[2];
 
 float signal_power(frame_t *buf, jack_nframes_t nframes)
 {

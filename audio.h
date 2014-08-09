@@ -9,9 +9,6 @@ typedef jack_default_audio_sample_t frame_t;
 
 float signal_power(frame_t *buf, jack_nframes_t nframes);
 
-extern jack_client_t *client;
-extern jack_port_t *master_port[2];
-
 /* Returns:
  *    0 on success,
  *   -1 if audio startup failed
