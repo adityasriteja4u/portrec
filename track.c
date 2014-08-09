@@ -8,7 +8,7 @@
 
 void fatal(const char *fmt, ...);
 
-struct track *new_track(jack_client_t *client, const char *name, int length,
+struct track *new_track(const char *name, int length,
                         const char *port)
 {
         struct track *track = malloc(sizeof(struct track));
@@ -17,13 +17,9 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
         strcpy(track->name, name);
         track->tape = calloc(length, sizeof(frame_t));
 
-        track->input_port =  jack_port_register(client, port,
-                                                JACK_DEFAULT_AUDIO_TYPE,
-                                                JackPortIsInput, 0);
+        track->input_bus = new_bus(INPUT, 1, port);
 
         track->in_buf  = NULL;
-
-        if (track->input_port==NULL) fatal("no more JACK ports available\n");
 
         track->vol = 1.0;
         track->pan = 0.5;
@@ -32,9 +28,9 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
         return track;
 }
 
-void delete_track(jack_client_t *client, struct track *track)
+void delete_track(struct track *track)
 {
-        jack_port_unregister(client, track->input_port);
+        delete_bus(track->input_bus);
         free(track->tape);
         free(track->name);
         free(track);

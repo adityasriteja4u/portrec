@@ -15,7 +15,7 @@ struct track
         // general
         char *name;
         int length;
-        jack_port_t *input_port;
+        struct bus *input_bus;
         frame_t *tape;
         double vol;
         double pan; // 0.0=L 1.0=R
@@ -26,14 +26,14 @@ struct track
         float out_meter;
 
         // buffers (only valid during inside process callback)
-        jack_nframes_t nframes;
+        int nframes;
         frame_t *in_buf;
 };
 
-struct track *new_track(jack_client_t *client, const char *name, int length,
+struct track *new_track(const char *name, int length,
                         const char *port);
 
-void delete_track(jack_client_t *client, struct track *track);
+void delete_track(struct track *track);
 
 /* Returns:
  *   0 on success,

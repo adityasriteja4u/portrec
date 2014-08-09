@@ -1,9 +1,10 @@
 #include "audio.h"
-#include "main.h"
-#include "track.h"
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
+#include "main.h"
+#include "track.h"
 
 jack_client_t *client;
 jack_port_t *master_port[2];
@@ -23,6 +24,12 @@ float signal_power(frame_t *buf, jack_nframes_t nframes)
 static void jack_shutdown(void *arg)
 {
         exit(1);
+}
+
+static frame_t *bus_get_buffer(struct bus *bus, int nframes)
+{
+       // TODO
+       return jack_port_get_buffer(bus->ports[0], nframes);
 }
 
 static void transport_update()
@@ -50,15 +57,10 @@ static int process(jack_nframes_t nframes, void *arg)
         for (i = 0; i<nframes; ++i) { L[i] = 0.0; R[i] = 0.0; }
 
         for (t = 0; t<track_count; ++t) {
-                jack_latency_range_t latency;
-
-                jack_port_get_latency_range(tracks[t]->input_port, JackCaptureLatency, &latency);
-                if (latency.min!=latency.max) fatal("latency.min (%d) != latency.max (%d)\n", latency.min, latency.max);
-
                 tracks[t]->nframes = nframes;
-                tracks[t]->in_buf  = jack_port_get_buffer(tracks[t]->input_port,  nframes);
+                tracks[t]->in_buf  = bus_get_buffer(tracks[t]->input_bus,  nframes);
 
-                process_track(tracks[t], 3*latency.min, L, R);
+                process_track(tracks[t], 3*get_bus_min_latency(tracks[t]->input_bus), L, R);
 
                 tracks[t]->in_buf  = NULL;
         }
@@ -119,4 +121,66 @@ void transport_locate(int where)
 {
         if (where<0) where = 0;
         jack_transport_locate(client, where);
+}
+
+struct bus *new_bus(enum direction direction, int channels, const char *name)
+{
+        if (channels<1 || channels>16) return NULL;
+
+        int name_len = strlen(name);
+        char *portname;
+        portname = malloc(name_len+10);
+        if (!portname) return NULL;
+        strcpy(portname, name);
+
+        struct bus *result;
+        result = malloc(sizeof(*result));
+        if (!result) return NULL;
+
+        result->channels = channels;
+        result->ports = malloc(sizeof(*result->ports));
+        if (!result->ports) {
+                free(result);
+                return NULL;
+        }
+
+        int i;
+        for (i = 0; i<channels; ++i) {
+                if (channels==2) {
+                        portname[name_len] = '\0';
+                        strcat(portname, i==0?":L":":R");
+                } else if (channels!=1) {
+                        portname[name_len] = ':';
+                        portname[name_len+1] = 'A'+i;
+                        portname[name_len+2] = '\0';
+                }
+                result->ports[i] = jack_port_register(client,
+                                                      portname,
+                                                      JACK_DEFAULT_AUDIO_TYPE,
+                                                      direction==INPUT?JackPortIsInput:JackPortIsOutput,
+                                                      0);
+        }
+        return result;
+}
+
+void delete_bus(struct bus *bus)
+{
+        int i;
+        for (i = 0; i<bus->channels; ++i) jack_port_unregister(client, bus->ports[i]);
+
+        free(bus->ports);
+        free(bus);
+}
+
+int get_bus_min_latency(struct bus *bus)
+{
+        int min = 0;
+        int i;
+
+        for (i = 0; i<bus->channels; ++i) {
+                jack_latency_range_t latency;
+                jack_port_get_latency_range(bus->ports[0], JackCaptureLatency, &latency);
+                if (latency.min<min) min = latency.min;
+        }
+        return min;
 }

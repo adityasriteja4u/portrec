@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
                         tape_len = frame_rate * 60 * atoi(optarg);
                         break;
                 case 't':
-                        tracks[track_count] = new_track(client, optarg, tape_len, optarg);
+                        tracks[track_count] = new_track(optarg, tape_len, optarg);
                         int res;
                         if (import_from) res = import_track(tracks[track_count], import_from);
                         fprintf(stderr, "%d\n", res);
@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
                  * the default set of three tracks.
                  */
                 track_count = 3;
-                tracks[0] = new_track(client, "track1", frame_rate*60*5, "track1");
-                tracks[1] = new_track(client, "track2", frame_rate*60*5, "track2");
-                tracks[2] = new_track(client, "track3", frame_rate*60*5, "track3");
+                tracks[0] = new_track("track1", frame_rate*60*5, "track1");
+                tracks[1] = new_track("track2", frame_rate*60*5, "track2");
+                tracks[2] = new_track("track3", frame_rate*60*5, "track3");
         }
 
         int t;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
                 export_track(tracks[t], strcat(strncat(filename, tracks[t]->name, 80),".flac"));
         }
 
-        for (t = 0; t<track_count; ++t) delete_track(client, tracks[t]);
+        for (t = 0; t<track_count; ++t) delete_track(tracks[t]);
 
         shutdown_audio();
         shutdown_ui();
