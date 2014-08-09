@@ -81,14 +81,11 @@ int init_audio(const char *name)
                                             JACK_DEFAULT_AUDIO_TYPE,
                                             JackPortIsOutput, 0);
 
-        tracks[0] = new_track(client, "track1", tapeLength, "track1:in", "track1:out");
-        tracks[1] = new_track(client, "track2", tapeLength, "track2:in", "track2:out");
-        tracks[2] = new_track(client, "track3", tapeLength, "track3:in", "track3:out");
-
         jack_set_process_callback(client, process, 0);
         jack_on_shutdown(client, jack_shutdown, 0);
 
         if (jack_activate(client)) return -2;
+
         return 0;
 }
 
