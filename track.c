@@ -1,8 +1,9 @@
+#include "track.h"
+
 #include <sndfile.h>
 #include <stdlib.h>
 #include <string.h>
 #include "audio.h"
-#include "track.h"
 #include "ui.h"
 
 void fatal(const char *fmt, ...);
@@ -89,7 +90,7 @@ void process_track(struct track *track,
                    frame_t *L,
                    frame_t *R)
 {
-        jack_nframes_t i;
+        int i;
         int j = frame;
         if (transport==ROLLING && track->flags&TRACK_REC) {
                 j -= offset;
