@@ -41,7 +41,6 @@ void process_track(struct track *track,
                    int offset,
                    int pos_min,
                    int pos_max,
-                   jack_transport_state_t transport,
                    jack_default_audio_sample_t *L,
                    jack_default_audio_sample_t *R);
 

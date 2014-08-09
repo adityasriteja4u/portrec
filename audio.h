@@ -23,12 +23,16 @@ void shutdown_audio();
 
 enum transport {STOPPED, ROLLING};
 
-extern jack_nframes_t frame;
-extern jack_nframes_t frame_rate;
-extern enum transport transport;
+/* These variables are read-only outside transport_*() functions below.
+ * They hold the status of the transport at the beginning of the last
+ * callback cycle.
+ */
+extern volatile jack_nframes_t frame;
+extern volatile jack_nframes_t frame_rate;
+extern volatile enum transport transport;
 
-void update_transport_information();
 void transport_start();
 void transport_stop();
+void transport_locate(jack_nframes_t where);
 
 #endif

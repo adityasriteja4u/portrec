@@ -25,11 +25,24 @@ static void jack_shutdown(void *arg)
         exit(1);
 }
 
+static void transport_update()
+{
+        jack_position_t pos;
+
+        if (jack_transport_query(client, &pos)==JackTransportRolling)
+                transport = ROLLING;
+        else
+                transport = STOPPED;
+
+        frame = pos.frame;
+        frame_rate = pos.frame_rate;
+}
+
 static int process(jack_nframes_t nframes, void *arg)
 {
         int t;
         jack_nframes_t i;
-        update_transport_information();
+        transport_update();
 
         jack_default_audio_sample_t *L, *R;
         L = jack_port_get_buffer(master_port[0], nframes);
@@ -45,7 +58,7 @@ static int process(jack_nframes_t nframes, void *arg)
                 tracks[t]->nframes = nframes;
                 tracks[t]->in_buf  = jack_port_get_buffer(tracks[t]->input_port,  nframes);
 
-                process_track(tracks[t], 3*latency.min, 0, tapeLength, transport, L, R);
+                process_track(tracks[t], 3*latency.min, 0, tapeLength, L, R);
 
                 tracks[t]->in_buf  = NULL;
         }
@@ -89,22 +102,9 @@ void shutdown_audio()
         jack_client_close(client);
 }
 
-jack_nframes_t frame;
-jack_nframes_t frame_rate;
-enum transport transport;
-
-void update_transport_information()
-{
-        jack_position_t pos;
-
-        if (jack_transport_query(client, &pos)==JackTransportRolling)
-                transport = ROLLING;
-        else
-                transport = STOPPED;
-
-        frame = pos.frame;
-        frame_rate = pos.frame_rate;
-}
+volatile jack_nframes_t frame = 0;
+volatile jack_nframes_t frame_rate = 48000;
+volatile enum transport transport = STOPPED;
 
 void transport_start()
 {
@@ -116,4 +116,9 @@ void transport_stop()
 {
         jack_transport_stop(client);
         transport = STOPPED;
+}
+
+void transport_locate(jack_nframes_t where)
+{
+        jack_transport_locate(client, where);
 }

@@ -41,7 +41,7 @@ static int command(int key, struct track **tracks, int track_count)
                         else transport_start();
                         break;
                 case 'z':
-                        jack_transport_locate(client, 0);
+                        transport_locate(0);
                         break;
                 case 'r':
                         tracks[current_track]->flags ^= TRACK_REC;
@@ -82,7 +82,7 @@ static int command(int key, struct track **tracks, int track_count)
                 if (key>='a' && key<='z') mark[key-'a'] = where;
                 mode = NORMAL;
         } else if (mode==GOTO_MARK) {
-                if (key>='a' && key<='z') jack_transport_locate(client, mark[key-'a']);
+                if (key>='a' && key<='z') transport_locate(mark[key-'a']);
                 mode = NORMAL;
         }
         return 0;

@@ -68,13 +68,12 @@ void process_track(struct track *track,
                    int offset,
                    int pos_min,
                    int pos_max,
-                   jack_transport_state_t transport,
                    jack_default_audio_sample_t *L,
                    jack_default_audio_sample_t *R)
 {
         jack_nframes_t i;
         int j = frame;
-        if (transport==JackTransportRolling && track->flags&TRACK_REC) {
+        if (transport==ROLLING && track->flags&TRACK_REC) {
                 j -= offset;
                 for (i = 0; i<track->nframes; ++i) {
                         if (j>=pos_min && j<pos_max) track->tape[j] = track->in_buf[i];
@@ -98,7 +97,7 @@ void process_track(struct track *track,
          *   - track is not muted with respect to both MUTE and SOLO,
          *   - track is not marked for recording.
          */
-        if (transport==JackTransportRolling && !(track->flags&(TRACK_MUTE|TRACK_REC))) {
+        if (transport==ROLLING && !(track->flags&(TRACK_MUTE|TRACK_REC))) {
                 for (i = 0; i<track->nframes; ++i) {
                         *L++ += (1.0-track->pan) * track->vol * track->tape[frame+i];
                         *R++ +=      track->pan  * track->vol * track->tape[frame+i];
