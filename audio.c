@@ -9,7 +9,7 @@
 static jack_client_t *client;
 static jack_port_t *master_port[2];
 
-float signal_power(frame_t *buf, jack_nframes_t nframes)
+float signal_power(frame_t *buf, int nframes)
 {
         float peak = 0.0;
         jack_nframes_t i;

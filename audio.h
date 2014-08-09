@@ -7,7 +7,7 @@
 
 typedef jack_default_audio_sample_t frame_t;
 
-float signal_power(frame_t *buf, jack_nframes_t nframes);
+float signal_power(frame_t *buf, int nframes);
 
 /* Returns:
  *    0 on success,
