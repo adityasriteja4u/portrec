@@ -35,12 +35,10 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
 
 void delete_track(jack_client_t *client, struct track *track);
 
-void export_track(struct track *track, const char *filename, int length);
+void export_track(struct track *track, const char *filename);
 
 void process_track(struct track *track,
                    int offset,
-                   int pos_min,
-                   int pos_max,
                    frame_t *L,
                    frame_t *R);
 

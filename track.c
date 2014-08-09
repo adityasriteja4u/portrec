@@ -39,7 +39,7 @@ void delete_track(jack_client_t *client, struct track *track)
         free(track);
 }
 
-void export_track(struct track *track, const char *filename, int length)
+void export_track(struct track *track, const char *filename)
 {
         SNDFILE *f;
         SF_INFO info;
@@ -58,7 +58,7 @@ void export_track(struct track *track, const char *filename, int length)
         f = sf_open(filename, SFM_WRITE, &info);
         if (f==NULL)
                 fatal("couldn't open file %s\n", filename);
-        if (sf_writef_float(f, track->tape, length)!=length)
+        if (sf_writef_float(f, track->tape, track->length)!=track->length)
                 fatal("couldn't write to file %s\n", filename);
         sf_close(f);
 
@@ -66,8 +66,6 @@ void export_track(struct track *track, const char *filename, int length)
 
 void process_track(struct track *track,
                    int offset,
-                   int pos_min,
-                   int pos_max,
                    frame_t *L,
                    frame_t *R)
 {
@@ -76,7 +74,7 @@ void process_track(struct track *track,
         if (transport==ROLLING && track->flags&TRACK_REC) {
                 j -= offset;
                 for (i = 0; i<track->nframes; ++i) {
-                        if (j>=pos_min && j<pos_max) track->tape[j] = track->in_buf[i];
+                        if (j>=0 && j<track->length) track->tape[j] = track->in_buf[i];
                         j++;
                 }
         }

@@ -3,7 +3,6 @@
 
 extern struct track *tracks[10];
 extern int track_count;
-extern int tapeLength;
 
 void fatal(const char *fmt, ...);
 

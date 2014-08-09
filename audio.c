@@ -58,7 +58,7 @@ static int process(jack_nframes_t nframes, void *arg)
                 tracks[t]->nframes = nframes;
                 tracks[t]->in_buf  = jack_port_get_buffer(tracks[t]->input_port,  nframes);
 
-                process_track(tracks[t], 3*latency.min, 0, tapeLength, L, R);
+                process_track(tracks[t], 3*latency.min, L, R);
 
                 tracks[t]->in_buf  = NULL;
         }
