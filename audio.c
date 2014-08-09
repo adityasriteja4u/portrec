@@ -102,8 +102,8 @@ void shutdown_audio()
         jack_client_close(client);
 }
 
-volatile jack_nframes_t frame = 0;
-volatile jack_nframes_t frame_rate = 48000;
+volatile int frame = 0;
+volatile int frame_rate = 48000;
 volatile enum transport transport = STOPPED;
 
 void transport_start()
@@ -118,7 +118,8 @@ void transport_stop()
         transport = STOPPED;
 }
 
-void transport_locate(jack_nframes_t where)
+void transport_locate(int where)
 {
+        if (where<0) where = 0;
         jack_transport_locate(client, where);
 }

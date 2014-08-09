@@ -27,12 +27,12 @@ enum transport {STOPPED, ROLLING};
  * They hold the status of the transport at the beginning of the last
  * callback cycle.
  */
-extern volatile jack_nframes_t frame;
-extern volatile jack_nframes_t frame_rate;
+extern volatile int frame;
+extern volatile int frame_rate;
 extern volatile enum transport transport;
 
 void transport_start();
 void transport_stop();
-void transport_locate(jack_nframes_t where);
+void transport_locate(int where);
 
 #endif
