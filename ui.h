@@ -1,7 +1,6 @@
 #ifndef UI_H
 #define UI_H
 
-#include <jack/jack.h>
 #include "track.h"
 
 extern float meters_decay/*dB/sec*/;

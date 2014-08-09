@@ -1,5 +1,4 @@
 #include <ncurses.h>
-#include <jack/jack.h>
 #include "audio.h"
 #include "ui.h"
 
@@ -115,12 +114,11 @@ static void display(struct track **tracks, int track_count)
                 display_meter(t+1, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter,
                               48.0f, 16);
 
-                jack_position_t pos;
                 switch (transport) {
                 case ROLLING: mvprintw(0, 0, "rolling"); break;
                 case STOPPED: mvprintw(0, 0, "stopped"); break;
                 }
-                mvprintw(0, 10, "%5.1f s", (double)pos.frame/pos.frame_rate);
+                mvprintw(0, 10, "%5.1f s", (double)frame/frame_rate);
         }
         refresh();
 }

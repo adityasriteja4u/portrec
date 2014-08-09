@@ -8,7 +8,7 @@
 jack_client_t *client;
 jack_port_t *master_port[2];
 
-float signal_power(jack_default_audio_sample_t *buf, jack_nframes_t nframes)
+float signal_power(frame_t *buf, jack_nframes_t nframes)
 {
         float peak = 0.0;
         jack_nframes_t i;
@@ -44,7 +44,7 @@ static int process(jack_nframes_t nframes, void *arg)
         jack_nframes_t i;
         transport_update();
 
-        jack_default_audio_sample_t *L, *R;
+        frame_t *L, *R;
         L = jack_port_get_buffer(master_port[0], nframes);
         R = jack_port_get_buffer(master_port[1], nframes);
         for (i = 0; i<nframes; ++i) { L[i] = 0.0; R[i] = 0.0; }

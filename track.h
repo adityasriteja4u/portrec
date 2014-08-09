@@ -1,7 +1,7 @@
 #ifndef TRACK_H
 #define TRACK_H
 
-#include <jack/jack.h>
+#include "audio.h"
 
 enum
 {
@@ -16,7 +16,7 @@ struct track
         char *name;
         int length;
         jack_port_t *input_port;
-        jack_default_audio_sample_t *tape;
+        frame_t *tape;
         double vol;
         double pan; // 0.0=L 1.0=R
         int flags;
@@ -27,7 +27,7 @@ struct track
 
         // buffers (only valid during inside process callback)
         jack_nframes_t nframes;
-        jack_default_audio_sample_t *in_buf;
+        frame_t *in_buf;
 };
 
 struct track *new_track(jack_client_t *client, const char *name, int length,
@@ -41,7 +41,7 @@ void process_track(struct track *track,
                    int offset,
                    int pos_min,
                    int pos_max,
-                   jack_default_audio_sample_t *L,
-                   jack_default_audio_sample_t *R);
+                   frame_t *L,
+                   frame_t *R);
 
 #endif

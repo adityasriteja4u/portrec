@@ -14,7 +14,7 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
         track->name = malloc(strlen(name)+1);
         track->length = length;
         strcpy(track->name, name);
-        track->tape = calloc(length, sizeof(jack_default_audio_sample_t));
+        track->tape = calloc(length, sizeof(frame_t));
 
         track->input_port =  jack_port_register(client, inport,
                                                 JACK_DEFAULT_AUDIO_TYPE,
@@ -68,8 +68,8 @@ void process_track(struct track *track,
                    int offset,
                    int pos_min,
                    int pos_max,
-                   jack_default_audio_sample_t *L,
-                   jack_default_audio_sample_t *R)
+                   frame_t *L,
+                   frame_t *R)
 {
         jack_nframes_t i;
         int j = frame;

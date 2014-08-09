@@ -5,7 +5,9 @@
 
 // General
 
-float signal_power(jack_default_audio_sample_t *buf, jack_nframes_t nframes);
+typedef jack_default_audio_sample_t frame_t;
+
+float signal_power(frame_t *buf, jack_nframes_t nframes);
 
 extern jack_client_t *client;
 extern jack_port_t *master_port[2];
@@ -34,5 +36,13 @@ extern volatile enum transport transport;
 void transport_start();
 void transport_stop();
 void transport_locate(int where);
+
+// Buses
+
+struct bus
+{
+        int channels;
+        jack_port_t **ports; /* array of pointers to ports */
+};
 
 #endif
