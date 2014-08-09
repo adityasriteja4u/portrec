@@ -30,9 +30,9 @@ int main(int argc, char *argv[])
 
         if (init_audio(name)) fatal("Could not initialize audio\n");
 
-        tracks[0] = new_track(client, "track1", tapeLength, "track1:in", "track1:out");
-        tracks[1] = new_track(client, "track2", tapeLength, "track2:in", "track2:out");
-        tracks[2] = new_track(client, "track3", tapeLength, "track3:in", "track3:out");
+        tracks[0] = new_track(client, "track1", tapeLength, "track1:in");
+        tracks[1] = new_track(client, "track2", tapeLength, "track2:in");
+        tracks[2] = new_track(client, "track3", tapeLength, "track3:in");
 
         int t;
         main_loop(tracks, track_count);

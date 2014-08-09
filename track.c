@@ -8,7 +8,7 @@
 void fatal(const char *fmt, ...);
 
 struct track *new_track(jack_client_t *client, const char *name, int length,
-                        const char *inport, const char *outport)
+                        const char *port)
 {
         struct track *track = malloc(sizeof(struct track));
         track->name = malloc(strlen(name)+1);
@@ -16,7 +16,7 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
         strcpy(track->name, name);
         track->tape = calloc(length, sizeof(frame_t));
 
-        track->input_port =  jack_port_register(client, inport,
+        track->input_port =  jack_port_register(client, port,
                                                 JACK_DEFAULT_AUDIO_TYPE,
                                                 JackPortIsInput, 0);
 

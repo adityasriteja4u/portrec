@@ -31,7 +31,7 @@ struct track
 };
 
 struct track *new_track(jack_client_t *client, const char *name, int length,
-                        const char *inport, const char *outport);
+                        const char *port);
 
 void delete_track(jack_client_t *client, struct track *track);
 
