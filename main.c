@@ -8,7 +8,6 @@
 #include "track.h"
 #include "ui.h"
 
-static int tape_len = 14400000; // 5 min
 int track_count = 0;
 struct track *tracks[10];
 const char *name = "simple";
@@ -31,27 +30,38 @@ int main(int argc, char *argv[])
         if (init_audio(name)) fatal("Could not initialize audio\n");
 
         int c;
-        while ((c = getopt(argc, argv, "l:t:"))!=-1)
+        while ((c = getopt(argc, argv, "f:l:t:"))!=-1) {
+                int tape_len = 14400000; // 5 min
+                char *import_from;
                 switch (c) {
+                case 'f':
+                        import_from = optarg;
+                        break;
                 case 'l':
-                        tape_len = 48000 * atoi(optarg);
+                        tape_len = frame_rate * 60 * atoi(optarg);
                         break;
                 case 't':
-                        tracks[track_count++] = new_track(client, optarg, tape_len, optarg);
+                        tracks[track_count] = new_track(client, optarg, tape_len, optarg);
+                        int res;
+                        if (import_from) res = import_track(tracks[track_count], import_from);
+                        fprintf(stderr, "%d\n", res);
+                        ++track_count;
+                        import_from = NULL;
                         break;
                 default:
                         fatal("unknown command line option\n");
                         break;
                 }
+        }
 
         if (track_count==0) {
                 /* If no tracks were created on the command line, create
                  * the default set of three tracks.
                  */
                 track_count = 3;
-                tracks[0] = new_track(client, "track1", tape_len, "track1");
-                tracks[1] = new_track(client, "track2", tape_len, "track2");
-                tracks[2] = new_track(client, "track3", tape_len, "track3");
+                tracks[0] = new_track(client, "track1", frame_rate*60*5, "track1");
+                tracks[1] = new_track(client, "track2", frame_rate*60*5, "track2");
+                tracks[2] = new_track(client, "track3", frame_rate*60*5, "track3");
         }
 
         int t;

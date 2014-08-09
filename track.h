@@ -35,6 +35,14 @@ struct track *new_track(jack_client_t *client, const char *name, int length,
 
 void delete_track(jack_client_t *client, struct track *track);
 
+/* Returns:
+ *   0 on success,
+ *   1 if could not open a file
+ *   2 if a file was in incompatible format (channels, sample rate)
+ *   3 if could not read from a file
+ */
+int import_track(struct track *track, const char *filename);
+
 void export_track(struct track *track, const char *filename);
 
 void process_track(struct track *track,

@@ -39,13 +39,33 @@ void delete_track(jack_client_t *client, struct track *track)
         free(track);
 }
 
+int import_track(struct track *track, const char *filename)
+{
+        SNDFILE *f;
+        SF_INFO info;
+
+        memset(&info, 0, sizeof(info));
+
+        f = sf_open(filename, SFM_READ, &info);
+        if (f==NULL)
+                return 1;
+        if (info.samplerate!=frame_rate || info.channels!=1) {
+                sf_close(f);
+                return 2;
+        }
+        if (sf_readf_float(f, track->tape, track->length)!=track->length)
+                return 3;
+        sf_close(f);
+        return 0;
+}
+
 void export_track(struct track *track, const char *filename)
 {
         SNDFILE *f;
         SF_INFO info;
 
         memset(&info, 0, sizeof(info));
-        info.samplerate = 48000;
+        info.samplerate = frame_rate;
         info.channels = 1;
         info.format = SF_FORMAT_FLAC | SF_FORMAT_PCM_16;
         /* Also possible formats:

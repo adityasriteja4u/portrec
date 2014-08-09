@@ -43,10 +43,10 @@ static int command(int key, struct track **tracks, int track_count)
                         transport_locate(0);
                         break;
                 case 'j':
-                        transport_locate(frame-48000*5);
+                        transport_locate(frame-frame_rate*5);
                         break;
                 case 'k':
-                        transport_locate(frame+48000*5);
+                        transport_locate(frame+frame_rate*5);
                         break;
                 case 'r':
                         tracks[current_track]->flags ^= TRACK_REC;
@@ -79,7 +79,7 @@ static int command(int key, struct track **tracks, int track_count)
                         break;
                 case 'P': /* set mark 5 secs before hitting the key */
                         mode = SET_MARK;
-                        where = frame - 48000*5;
+                        where = frame - frame_rate*5;
                         break;
                 case '\'':
                         mode = GOTO_MARK;
