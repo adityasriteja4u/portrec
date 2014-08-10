@@ -1,13 +1,13 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include <jack/jack.h>
+#include <portaudio.h>
 
 // General
 
-typedef jack_default_audio_sample_t frame_t;
+typedef float frame_t;
 
-float signal_power(frame_t *buf, int nframes);
+float signal_power(const frame_t *buf, int nframes);
 
 /* Returns:
  *    0 on success,
@@ -27,6 +27,8 @@ enum transport {STOPPED, ROLLING};
  */
 extern volatile int frame;
 extern volatile int frame_rate;
+extern volatile int input_latency;
+extern volatile int output_latency;
 extern volatile enum transport transport;
 
 void transport_start();
@@ -37,8 +39,7 @@ void transport_locate(int where);
 
 struct bus
 {
-        int channels;
-        jack_port_t **ports; /* pointer to array of pointers to ports */
+        int channel;
 };
 
 enum direction {INPUT, OUTPUT};

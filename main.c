@@ -67,6 +67,8 @@ int main(int argc, char *argv[])
         int t;
         main_loop(tracks, track_count);
 
+        shutdown_audio();
+
         for (t = 0; t<track_count; ++t) {
                 char filename[100] = "/tmp/";
                 export_track(tracks[t], strcat(strncat(filename, tracks[t]->name, 80),".flac"));
@@ -74,7 +76,6 @@ int main(int argc, char *argv[])
 
         for (t = 0; t<track_count; ++t) delete_track(tracks[t]);
 
-        shutdown_audio();
         shutdown_ui();
         return 0;
 }

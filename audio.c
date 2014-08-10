@@ -6,13 +6,12 @@
 #include "main.h"
 #include "track.h"
 
-static jack_client_t *client;
-static jack_port_t *master_port[2];
+static PaStream *stream;
 
-float signal_power(frame_t *buf, int nframes)
+float signal_power(const frame_t *buf, int nframes)
 {
         float peak = 0.0;
-        jack_nframes_t i;
+        int i;
         for (i = 0; i<nframes; ++i) {
                 float amplitude = fabsf(buf[i]);
                 if (amplitude>peak) peak = amplitude;
@@ -21,166 +20,135 @@ float signal_power(frame_t *buf, int nframes)
         return 20.0 * log10(peak); // conversion to dB; reference value = 1.0
 }
 
-static void jack_shutdown(void *arg)
+static void stream_finished(void *arg)
 {
         exit(1);
 }
 
-static frame_t *bus_get_buffer(struct bus *bus, int nframes)
-{
-       // TODO
-       return jack_port_get_buffer(bus->ports[0], nframes);
-}
-
-static void transport_update()
-{
-        jack_position_t pos;
-
-        if (jack_transport_query(client, &pos)==JackTransportRolling)
-                transport = ROLLING;
-        else
-                transport = STOPPED;
-
-        frame = pos.frame;
-        frame_rate = pos.frame_rate;
-}
-
-static int process(jack_nframes_t nframes, void *arg)
+static int process(const void *inputBuffer, void *outputBuffer,
+                   unsigned long framesPerBuffer,
+                   const PaStreamCallbackTimeInfo* timeInfo,
+                   PaStreamCallbackFlags statusFlags,
+                   void *userData)
 {
         int t;
-        jack_nframes_t i;
-        transport_update();
+        int i;
 
-        frame_t *L, *R;
-        L = jack_port_get_buffer(master_port[0], nframes);
-        R = jack_port_get_buffer(master_port[1], nframes);
-        for (i = 0; i<nframes; ++i) { L[i] = 0.0; R[i] = 0.0; }
+        frame_t *in  = (frame_t*)inputBuffer;
+        frame_t *out = (frame_t*)outputBuffer;
+        for (i = 0; i<2*framesPerBuffer; ++i) { out[i] = 0.0f; }
 
         for (t = 0; t<track_count; ++t) {
-                tracks[t]->nframes = nframes;
-                tracks[t]->in_buf  = bus_get_buffer(tracks[t]->input_bus,  nframes);
+                tracks[t]->nframes = framesPerBuffer;
 
-                process_track(tracks[t], 3*get_bus_min_latency(tracks[t]->input_bus), L, R);
-
-                tracks[t]->in_buf  = NULL;
+                process_track(tracks[t], in, out);
         }
+
+        // Update transport
+        if (transport==ROLLING) frame += framesPerBuffer;
+
         return 0;
 }
 
 int init_audio(const char *name)
 {
-        const char *server_name = NULL;
-        jack_options_t options = JackNullOption;
-        jack_status_t status;
+        PaStreamParameters inputParameters;
+        PaStreamParameters outputParameters;
+        PaError err;
 
-        client = jack_client_open(name, options, &status, server_name);
-        if (client==NULL) return -1;
+        err = Pa_Initialize();
+        if (err!=paNoError) return 1;
 
-        master_port[0] = jack_port_register(client, "master:l",
-                                            JACK_DEFAULT_AUDIO_TYPE,
-                                            JackPortIsOutput, 0);
-        master_port[1] = jack_port_register(client, "master:r",
-                                            JACK_DEFAULT_AUDIO_TYPE,
-                                            JackPortIsOutput, 0);
+        inputParameters.device = Pa_GetDefaultInputDevice();
+        if (inputParameters.device==paNoDevice) {
+                goto error;
+        }
+        inputParameters.channelCount = 1;
+        inputParameters.sampleFormat = paFloat32;
+        inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
+        inputParameters.hostApiSpecificStreamInfo = NULL;
 
-        jack_set_process_callback(client, process, 0);
-        jack_on_shutdown(client, jack_shutdown, 0);
+        outputParameters.device = Pa_GetDefaultOutputDevice();
+        if (outputParameters.device==paNoDevice) {
+                goto error;
+        }
+        outputParameters.channelCount = 2;
+        outputParameters.sampleFormat = paFloat32;
+        outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+        outputParameters.hostApiSpecificStreamInfo = NULL;
 
-        if (jack_activate(client)) return -2;
+        err = Pa_OpenStream(&stream,
+                            &inputParameters,
+                            &outputParameters,
+                            48000,
+                            paFramesPerBufferUnspecified,
+                            paNoFlag,
+                            process,
+                            NULL);
+        if (err!=paNoError) goto error;
+
+        err = Pa_SetStreamFinishedCallback(stream, stream_finished);
+        if (err!=paNoError) goto error;
+
+        err = Pa_StartStream(stream);
+        if (err!=paNoError) goto error;
+
+        const PaStreamInfo *stream_info = Pa_GetStreamInfo(stream);
+        frame_rate = (int)stream_info->sampleRate;
+        input_latency  = (int)(frame_rate*stream_info->inputLatency);
+        output_latency = (int)(frame_rate*stream_info->outputLatency);
 
         return 0;
+
+error:  Pa_Terminate();
+        return 1;
 }
 
 void shutdown_audio()
 {
-        jack_deactivate(client);
-
-        jack_port_unregister(client, master_port[0]);
-        jack_port_unregister(client, master_port[1]);
-
-        jack_client_close(client);
+        Pa_Terminate();
 }
 
 volatile int frame = 0;
 volatile int frame_rate = 48000;
+volatile int input_latency  = 0;
+volatile int output_latency = 0;
 volatile enum transport transport = STOPPED;
 
 void transport_start()
 {
-        jack_transport_start(client);
-        /* We don't know yet whether the transport is rolling or starting */
+        transport = ROLLING;
 }
 
 void transport_stop()
 {
-        jack_transport_stop(client);
         transport = STOPPED;
 }
 
 void transport_locate(int where)
 {
         if (where<0) where = 0;
-        jack_transport_locate(client, where);
+        frame = where;
 }
 
 struct bus *new_bus(enum direction direction, int channels, const char *name)
 {
         if (channels<1 || channels>16) return NULL;
 
-        int name_len = strlen(name);
-        char *portname;
-        portname = malloc(name_len+10);
-        if (!portname) return NULL;
-        strcpy(portname, name);
-
         struct bus *result;
         result = malloc(sizeof(*result));
         if (!result) return NULL;
 
-        result->channels = channels;
-        result->ports = malloc(sizeof(*result->ports));
-        if (!result->ports) {
-                free(result);
-                return NULL;
-        }
-
-        int i;
-        for (i = 0; i<channels; ++i) {
-                if (channels==2) {
-                        portname[name_len] = '\0';
-                        strcat(portname, i==0?":L":":R");
-                } else if (channels!=1) {
-                        portname[name_len] = ':';
-                        portname[name_len+1] = 'A'+i;
-                        portname[name_len+2] = '\0';
-                }
-                result->ports[i] = jack_port_register(client,
-                                                      portname,
-                                                      JACK_DEFAULT_AUDIO_TYPE,
-                                                      direction==INPUT?JackPortIsInput:JackPortIsOutput,
-                                                      0);
-        }
+        result->channel = 1;
         return result;
 }
 
 void delete_bus(struct bus *bus)
 {
-        int i;
-        for (i = 0; i<bus->channels; ++i) jack_port_unregister(client, bus->ports[i]);
-
-        free(bus->ports);
         free(bus);
 }
 
 int get_bus_min_latency(struct bus *bus)
 {
-        int min = 0;
-        int i;
-
-        for (i = 0; i<bus->channels; ++i) {
-                jack_latency_range_t latency;
-                jack_port_get_latency_range(bus->ports[0], JackCaptureLatency, &latency);
-                if (latency.min<min) min = latency.min;
-        }
-        return min;
+        return 0; // TODO
 }

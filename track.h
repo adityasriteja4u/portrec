@@ -15,7 +15,6 @@ struct track
         // general
         char *name;
         int length;
-        struct bus *input_bus;
         frame_t *tape;
         double vol;
         double pan; // 0.0=L 1.0=R
@@ -27,7 +26,6 @@ struct track
 
         // buffers (only valid during inside process callback)
         int nframes;
-        frame_t *in_buf;
 };
 
 struct track *new_track(const char *name, int length,
@@ -46,8 +44,7 @@ int import_track(struct track *track, const char *filename);
 void export_track(struct track *track, const char *filename);
 
 void process_track(struct track *track,
-                   int offset,
-                   frame_t *L,
-                   frame_t *R);
+                   const frame_t *in,
+                   frame_t *out);
 
 #endif

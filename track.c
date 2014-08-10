@@ -17,10 +17,6 @@ struct track *new_track(const char *name, int length,
         strcpy(track->name, name);
         track->tape = calloc(length, sizeof(frame_t));
 
-        track->input_bus = new_bus(INPUT, 1, port);
-
-        track->in_buf  = NULL;
-
         track->vol = 1.0;
         track->pan = 0.5;
         track->flags = 0;
@@ -30,7 +26,6 @@ struct track *new_track(const char *name, int length,
 
 void delete_track(struct track *track)
 {
-        delete_bus(track->input_bus);
         free(track->tape);
         free(track->name);
         free(track);
@@ -82,28 +77,27 @@ void export_track(struct track *track, const char *filename)
 }
 
 void process_track(struct track *track,
-                   int offset,
-                   frame_t *L,
-                   frame_t *R)
+                   const frame_t *in,
+                   frame_t *out)
 {
         int i;
         int j = frame;
         if (transport==ROLLING && track->flags&TRACK_REC) {
-                j -= offset;
+                j -= input_latency;
                 for (i = 0; i<track->nframes; ++i) {
-                        if (j>=0 && j<track->length) track->tape[j] = track->in_buf[i];
+                        if (j>=0 && j<track->length) track->tape[j] = in[i];
                         j++;
                 }
         }
 
         /* Update the meters */
-        float in  = signal_power(track->in_buf, track->nframes);
-        float out = signal_power(track->tape+frame, track->nframes);
+        float in_pow  = signal_power(in, track->nframes);
+        float out_pow = signal_power(track->tape+frame, track->nframes);
         float decay = meters_decay * track->nframes / frame_rate;
         track->in_meter  -= decay;
         track->out_meter -= decay;
-        if (in>track->in_meter)   track->in_meter  = in;
-        if (out>track->out_meter) track->out_meter = out;
+        if (in_pow>track->in_meter)   track->in_meter  = in_pow;
+        if (out_pow>track->out_meter) track->out_meter = out_pow;
 
         /* Mix track into the master bus
          *
@@ -114,8 +108,8 @@ void process_track(struct track *track,
          */
         if (transport==ROLLING && !(track->flags&(TRACK_MUTE|TRACK_REC))) {
                 for (i = 0; i<track->nframes; ++i) {
-                        *L++ += (1.0-track->pan) * track->vol * track->tape[frame+i];
-                        *R++ +=      track->pan  * track->vol * track->tape[frame+i];
+                        *out++ += (1.0-track->pan) * track->vol * track->tape[frame+i];
+                        *out++ +=      track->pan  * track->vol * track->tape[frame+i];
                 }
         }
 }
