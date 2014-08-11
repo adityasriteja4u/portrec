@@ -45,7 +45,7 @@ static int process(const void *inputBuffer, void *outputBuffer,
         // Update transport
         if (transport==ROLLING) frame += framesPerBuffer;
 
-        return 0;
+        return paContinue;
 }
 
 int init_audio(const char *name)
