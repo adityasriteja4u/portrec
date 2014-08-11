@@ -25,11 +25,11 @@ enum transport {STOPPED, ROLLING};
 /* These variables are read-only outside audio.c file. They hold the status
  * of the transport at the beginning of the last callback cycle.
  */
-extern volatile int frame;
-extern volatile int frame_rate;
-extern volatile int input_latency;
-extern volatile int output_latency;
-extern volatile enum transport transport;
+extern int frame;
+extern int frame_rate;
+extern int input_latency;
+extern int output_latency;
+extern enum transport transport;
 
 void transport_start();
 void transport_stop();

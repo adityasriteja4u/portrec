@@ -85,11 +85,11 @@ void shutdown_audio()
         Pa_Terminate();
 }
 
-volatile int frame = 0;
-volatile int frame_rate = 48000;
-volatile int input_latency  = 0;
-volatile int output_latency = 0;
-volatile enum transport transport = STOPPED;
+int frame = 0;
+int frame_rate = 48000;
+int input_latency  = 0;
+int output_latency = 0;
+enum transport transport = STOPPED;
 
 void transport_start()
 {
