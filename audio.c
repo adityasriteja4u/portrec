@@ -77,14 +77,11 @@ int init_audio(const char *name)
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = NULL;
 
-        err = Pa_OpenStream(&stream,
-                            &inputParameters,
-                            &outputParameters,
-                            48000,
-                            paFramesPerBufferUnspecified,
-                            paNoFlag,
-                            process,
-                            NULL);
+        err = Pa_OpenDefaultStream(&stream,
+                                   1, 2, paFloat32, 48000,
+                                   paFramesPerBufferUnspecified,
+                                   process,
+                                   NULL);
         if (err!=paNoError) goto error;
 
         err = Pa_SetStreamFinishedCallback(stream, stream_finished);
