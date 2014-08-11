@@ -81,9 +81,8 @@ void process_track(struct track *track,
                    frame_t *out)
 {
         int i;
-        int j = frame;
+        int j = frame - input_latency;
         if (transport==ROLLING && track->flags&TRACK_REC) {
-                j -= input_latency;
                 for (i = 0; i<track->nframes; ++i) {
                         if (j>=0 && j<track->length) track->tape[j] = in[i];
                         j++;
