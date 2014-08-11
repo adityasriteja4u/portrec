@@ -36,7 +36,7 @@ static int process(const void *inputBuffer, void *outputBuffer,
 
         frame_t *in  = (frame_t*)inputBuffer;
         frame_t *out = (frame_t*)outputBuffer;
-        for (i = 0; i<2*framesPerBuffer; ++i) { out[i] = 0.0f; }
+        for (i = 0; i<framesPerBuffer; ++i) { out[2*i] = 0.0f; out[2*i+1] = 0.0f; }
 
         for (t = 0; t<track_count; ++t) {
                 process_track(tracks[t], framesPerBuffer, in, out);
