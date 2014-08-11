@@ -78,17 +78,47 @@ static int process(const void *inputBuffer, void *outputBuffer,
         return paContinue;
 }
 
+static int set_input_parameters(PaStreamParameters *param)
+{
+        param->device = Pa_GetDefaultInputDevice();
+        if (param->device==paNoDevice) return 1;
+        param->channelCount = 1;
+        param->sampleFormat = paFloat32;
+        param->suggestedLatency = Pa_GetDeviceInfo(param->device)->defaultLowInputLatency;
+        param->hostApiSpecificStreamInfo = NULL;
+        return 0;
+}
+
+static int set_output_parameters(PaStreamParameters *param)
+{
+        param->device = Pa_GetDefaultOutputDevice();
+        if (param->device==paNoDevice) return 1;
+        param->channelCount = 2;
+        param->sampleFormat = paFloat32;
+        param->suggestedLatency = Pa_GetDeviceInfo(param->device)->defaultLowOutputLatency;
+        param->hostApiSpecificStreamInfo = NULL;
+        return 0;
+}
+
 int init_audio(const char *name)
 {
+        PaStreamParameters inputParameters;
+        PaStreamParameters outputParameters;
         PaError err;
 
         err = Pa_Initialize();
         if (err!=paNoError) return 1;
-        err = Pa_OpenDefaultStream(&stream,
-                                   1, 2, paFloat32, 48000,
-                                   paFramesPerBufferUnspecified,
-                                   process,
-                                   NULL);
+
+        set_input_parameters(&inputParameters);
+        set_output_parameters(&outputParameters);
+        err = Pa_OpenStream(&stream,
+                            &inputParameters,
+                            &outputParameters,
+                            48000,
+                            paFramesPerBufferUnspecified,
+                            paNoFlag,
+                            process,
+                            NULL);
         if (err!=paNoError) goto error;
 
         err = Pa_SetStreamFinishedCallback(stream, stream_finished);
