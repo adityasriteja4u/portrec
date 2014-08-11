@@ -52,31 +52,10 @@ static int process(const void *inputBuffer, void *outputBuffer,
 
 int init_audio(const char *name)
 {
-        PaStreamParameters inputParameters;
-        PaStreamParameters outputParameters;
         PaError err;
 
         err = Pa_Initialize();
         if (err!=paNoError) return 1;
-
-        inputParameters.device = Pa_GetDefaultInputDevice();
-        if (inputParameters.device==paNoDevice) {
-                goto error;
-        }
-        inputParameters.channelCount = 1;
-        inputParameters.sampleFormat = paFloat32;
-        inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
-        inputParameters.hostApiSpecificStreamInfo = NULL;
-
-        outputParameters.device = Pa_GetDefaultOutputDevice();
-        if (outputParameters.device==paNoDevice) {
-                goto error;
-        }
-        outputParameters.channelCount = 2;
-        outputParameters.sampleFormat = paFloat32;
-        outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-        outputParameters.hostApiSpecificStreamInfo = NULL;
-
         err = Pa_OpenDefaultStream(&stream,
                                    1, 2, paFloat32, 48000,
                                    paFramesPerBufferUnspecified,
