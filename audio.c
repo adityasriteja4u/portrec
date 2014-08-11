@@ -5,6 +5,7 @@
 #include <string.h>
 #include "main.h"
 #include "track.h"
+#include "ui.h"
 
 static PaStream *stream;
 
@@ -39,7 +40,36 @@ static int process(const void *inputBuffer, void *outputBuffer,
         for (i = 0; i<framesPerBuffer; ++i) { out[2*i] = 0.0f; out[2*i+1] = 0.0f; }
 
         for (t = 0; t<track_count; ++t) {
-                process_track(tracks[t], framesPerBuffer, in, out);
+                int j = frame - input_latency;
+                if (transport==ROLLING && tracks[t]->flags&TRACK_REC) {
+                        for (i = 0; i<framesPerBuffer; ++i) {
+                                if (j>=0 && j<tracks[t]->length) tracks[t]->tape[j] = in[i];
+                                j++;
+                        }
+                }
+
+                /* Update the meters */
+                float in_pow  = signal_power(in, framesPerBuffer);
+                float out_pow = signal_power(tracks[t]->tape+frame, framesPerBuffer);
+                float decay = meters_decay * framesPerBuffer / frame_rate;
+                tracks[t]->in_meter  -= decay;
+                tracks[t]->out_meter -= decay;
+                if (in_pow>tracks[t]->in_meter)   tracks[t]->in_meter  = in_pow;
+                if (out_pow>tracks[t]->out_meter) tracks[t]->out_meter = out_pow;
+
+                /* Mix track into the master bus
+                 *
+                 * We're mixing track into the master bus if all are true:
+                 *   - transport is rolling,
+                 *   - track is not muted with respect to both MUTE and SOLO,
+                 *   - track is not marked for recording.
+                 */
+                if (transport==ROLLING && !(tracks[t]->flags&(TRACK_MUTE|TRACK_REC))) {
+                        for (i = 0; i<framesPerBuffer; ++i) {
+                                *out++ += (1.0-tracks[t]->pan) * tracks[t]->vol * tracks[t]->tape[frame+i];
+                                *out++ +=      tracks[t]->pan  * tracks[t]->vol * tracks[t]->tape[frame+i];
+                        }
+                }
         }
 
         // Update transport

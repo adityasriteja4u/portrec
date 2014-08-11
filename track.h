@@ -40,9 +40,4 @@ int import_track(struct track *track, const char *filename);
 
 void export_track(struct track *track, const char *filename);
 
-void process_track(struct track *track,
-                   int nframes,
-                   const frame_t *in,
-                   frame_t *out);
-
 #endif
