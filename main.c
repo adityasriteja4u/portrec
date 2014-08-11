@@ -42,9 +42,7 @@ int main(int argc, char *argv[])
                         break;
                 case 't':
                         tracks[track_count] = new_track(optarg, tape_len, optarg);
-                        int res;
-                        if (import_from) res = import_track(tracks[track_count], import_from);
-                        fprintf(stderr, "%d\n", res);
+                        if (import_from) import_track(tracks[track_count], import_from);
                         ++track_count;
                         import_from = NULL;
                         break;
