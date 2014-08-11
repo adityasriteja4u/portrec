@@ -39,9 +39,7 @@ static int process(const void *inputBuffer, void *outputBuffer,
         for (i = 0; i<2*framesPerBuffer; ++i) { out[i] = 0.0f; }
 
         for (t = 0; t<track_count; ++t) {
-                tracks[t]->nframes = framesPerBuffer;
-
-                process_track(tracks[t], in, out);
+                process_track(tracks[t], framesPerBuffer, in, out);
         }
 
         // Update transport

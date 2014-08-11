@@ -23,9 +23,6 @@ struct track
         // meters [dB, clipping=0 dB]; updated in process_track()
         float in_meter;
         float out_meter;
-
-        // buffers (only valid during inside process callback)
-        int nframes;
 };
 
 struct track *new_track(const char *name, int length,
@@ -44,6 +41,7 @@ int import_track(struct track *track, const char *filename);
 void export_track(struct track *track, const char *filename);
 
 void process_track(struct track *track,
+                   int nframes,
                    const frame_t *in,
                    frame_t *out);
 

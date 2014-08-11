@@ -77,22 +77,23 @@ void export_track(struct track *track, const char *filename)
 }
 
 void process_track(struct track *track,
+                   int nframes,
                    const frame_t *in,
                    frame_t *out)
 {
         int i;
         int j = frame - input_latency;
         if (transport==ROLLING && track->flags&TRACK_REC) {
-                for (i = 0; i<track->nframes; ++i) {
+                for (i = 0; i<nframes; ++i) {
                         if (j>=0 && j<track->length) track->tape[j] = in[i];
                         j++;
                 }
         }
 
         /* Update the meters */
-        float in_pow  = signal_power(in, track->nframes);
-        float out_pow = signal_power(track->tape+frame, track->nframes);
-        float decay = meters_decay * track->nframes / frame_rate;
+        float in_pow  = signal_power(in, nframes);
+        float out_pow = signal_power(track->tape+frame, nframes);
+        float decay = meters_decay * nframes / frame_rate;
         track->in_meter  -= decay;
         track->out_meter -= decay;
         if (in_pow>track->in_meter)   track->in_meter  = in_pow;
@@ -106,7 +107,7 @@ void process_track(struct track *track,
          *   - track is not marked for recording.
          */
         if (transport==ROLLING && !(track->flags&(TRACK_MUTE|TRACK_REC))) {
-                for (i = 0; i<track->nframes; ++i) {
+                for (i = 0; i<nframes; ++i) {
                         *out++ += (1.0-track->pan) * track->vol * track->tape[frame+i];
                         *out++ +=      track->pan  * track->vol * track->tape[frame+i];
                 }
