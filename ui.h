@@ -5,7 +5,7 @@
 
 extern float meters_decay/*dB/sec*/;
 
-void display_meter(int y, int x, float value/*dB*/, float range, int width); // range must be positive
+void display_meter(int y, int x, float value/*dB*/, int width);
 
 int init_ui(); // returns 0 on success
 void main_loop(struct track **tracks, int track_count);

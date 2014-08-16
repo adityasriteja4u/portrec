@@ -4,10 +4,11 @@
 
 float meters_decay = 100.0;
 
-void display_meter(int y, int x, float value, float range, int width)
+void display_meter(int y, int x, float value, int width)
 {
+        // Every strip is 3dB
         int i;
-        int strips = width*(value+range)/range;
+        int strips = width+value/3.0f;
         move(y, x);
         for (i = 0; i<width; ++i) addch(' ');
         move(y, x);
@@ -111,8 +112,7 @@ static void display(struct track **tracks, int track_count)
                          tracks[t]->pan,
                          tracks[t]->name);
 
-                display_meter(t+1, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter,
-                              48.0f, 16);
+                display_meter(t+1, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter, 16);
 
                 switch (transport) {
                 case ROLLING: mvprintw(0, 0, "rolling"); break;
