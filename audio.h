@@ -9,6 +9,9 @@ typedef float frame_t;
 
 float signal_power(const frame_t *buf, int nframes);
 
+extern float master_power_l;
+extern float master_power_r;
+
 /* Returns:
  *    0 on success,
  *   -1 if audio startup failed

@@ -21,6 +21,15 @@ float signal_power(const frame_t *buf, int nframes)
         return 20.0 * log10(peak); // conversion to dB; reference value = 1.0
 }
 
+static void update_meter(float *meter, float current_power, float decay)
+{
+        *meter -= decay;
+        if (current_power>*meter) *meter = current_power;
+}
+
+float master_power_l = 0.0f;
+float master_power_r = 0.0f;
+
 static void stream_finished(void *arg)
 {
         exit(1);
@@ -48,14 +57,9 @@ static int process(const void *inputBuffer, void *outputBuffer,
                         }
                 }
 
-                /* Update the meters */
-                float in_pow  = signal_power(in, framesPerBuffer);
-                float out_pow = signal_power(tracks[t]->tape+frame, framesPerBuffer);
                 float decay = meters_decay * framesPerBuffer / frame_rate;
-                tracks[t]->in_meter  -= decay;
-                tracks[t]->out_meter -= decay;
-                if (in_pow>tracks[t]->in_meter)   tracks[t]->in_meter  = in_pow;
-                if (out_pow>tracks[t]->out_meter) tracks[t]->out_meter = out_pow;
+                update_meter(&tracks[t]->in_meter, signal_power(in, framesPerBuffer), decay);
+                update_meter(&tracks[t]->out_meter, signal_power(tracks[t]->tape+frame, framesPerBuffer), decay);
 
                 /* Mix track into the master bus
                  *
