@@ -79,6 +79,9 @@ static int process(const void *inputBuffer, void *outputBuffer,
                 }
         }
 
+        update_meter(&master_power_l, signal_power(out, framesPerBuffer, 1), decay);
+        update_meter(&master_power_r, signal_power(out, framesPerBuffer, 2), decay);
+
         // Update transport
         if (transport==ROLLING) frame += framesPerBuffer;
 

@@ -101,8 +101,8 @@ static int command(int key, struct track **tracks, int track_count)
 static void display(struct track **tracks, int track_count)
 {
         mvaddstr(0, 34, "Master:");
-        display_meter(1, 34, 0.5, 16);
-        display_meter(2, 34, 0.5, 16);
+        display_meter(1, 34, master_power_l, 16);
+        display_meter(2, 34, master_power_r, 16);
 
         int t;
         for (t = 0; t<track_count; ++t) {
