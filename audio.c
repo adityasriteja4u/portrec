@@ -66,8 +66,8 @@ static int process(const void *inputBuffer, void *outputBuffer,
                  */
                 if (transport==ROLLING && !(tracks[t]->flags&(TRACK_MUTE|TRACK_REC))) {
                         for (i = 0; i<framesPerBuffer; ++i) {
-                                *out++ += (1.0-tracks[t]->pan) * tracks[t]->vol * tracks[t]->tape[frame+i];
-                                *out++ +=      tracks[t]->pan  * tracks[t]->vol * tracks[t]->tape[frame+i];
+                                out[2*i]   += (1.0-tracks[t]->pan) * tracks[t]->vol * tracks[t]->tape[frame+i];
+                                out[2*i+1] +=      tracks[t]->pan  * tracks[t]->vol * tracks[t]->tape[frame+i];
                         }
                 }
         }
