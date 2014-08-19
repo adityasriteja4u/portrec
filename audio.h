@@ -7,7 +7,12 @@
 
 typedef float frame_t;
 
-float signal_power(const frame_t *buf, int nframes);
+/* Channel is:
+ *  0 for mono signal
+ *  1 for left channel
+ *  2 for right channel
+ */
+float signal_power(const frame_t *buf, int nframes, int channel);
 
 extern float master_power_l;
 extern float master_power_r;

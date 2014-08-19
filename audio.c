@@ -9,11 +9,13 @@
 
 static PaStream *stream;
 
-float signal_power(const frame_t *buf, int nframes)
+float signal_power(const frame_t *buf, int nframes, int channel)
 {
         float peak = 0.0;
-        int i;
-        for (i = 0; i<nframes; ++i) {
+        int i = channel==2?1:0;
+        int skip = channel?2:1;
+        int n = nframes * skip;
+        for (; i<n; i += skip) {
                 float amplitude = fabsf(buf[i]);
                 if (amplitude>peak) peak = amplitude;
         }
@@ -48,6 +50,8 @@ static int process(const void *inputBuffer, void *outputBuffer,
         frame_t *out = (frame_t*)outputBuffer;
         for (i = 0; i<framesPerBuffer; ++i) { out[2*i] = 0.0f; out[2*i+1] = 0.0f; }
 
+        float decay = meters_decay * framesPerBuffer / frame_rate; // meters decay
+
         for (t = 0; t<track_count; ++t) {
                 int j = frame - input_latency;
                 if (transport==ROLLING && tracks[t]->flags&TRACK_REC) {
@@ -57,9 +61,8 @@ static int process(const void *inputBuffer, void *outputBuffer,
                         }
                 }
 
-                float decay = meters_decay * framesPerBuffer / frame_rate;
-                update_meter(&tracks[t]->in_meter, signal_power(in, framesPerBuffer), decay);
-                update_meter(&tracks[t]->out_meter, signal_power(tracks[t]->tape+frame, framesPerBuffer), decay);
+                update_meter(&tracks[t]->in_meter, signal_power(in, framesPerBuffer, 0), decay);
+                update_meter(&tracks[t]->out_meter, signal_power(tracks[t]->tape+frame, framesPerBuffer, 0), decay);
 
                 /* Mix track into the master bus
                  *
