@@ -100,10 +100,14 @@ static int command(int key, struct track **tracks, int track_count)
 
 static void display(struct track **tracks, int track_count)
 {
+        mvaddstr(0, 34, "Master:");
+        display_meter(1, 34, 0.5, 16);
+        display_meter(2, 34, 0.5, 16);
+
         int t;
         for (t = 0; t<track_count; ++t) {
                 //              -> R  M  S  vol   pan  name
-                mvprintw(t+1, 0, "%s %s %s %s %4.2f %4.2f  %10s",
+                mvprintw(t+4, 0, "%s %s %s %s %4.2f %4.2f  %10s",
                          current_track==t?"->":"  ",
                          tracks[t]->flags&TRACK_REC ?"R":" ",
                          tracks[t]->flags&TRACK_MUTE?"M":" ",
@@ -112,7 +116,7 @@ static void display(struct track **tracks, int track_count)
                          tracks[t]->pan,
                          tracks[t]->name);
 
-                display_meter(t+1, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter, 16);
+                display_meter(t+4, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter, 16);
         }
 
         switch (transport) {
