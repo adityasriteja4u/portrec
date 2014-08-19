@@ -113,13 +113,14 @@ static void display(struct track **tracks, int track_count)
                          tracks[t]->name);
 
                 display_meter(t+1, 34, tracks[t]->flags&TRACK_REC?tracks[t]->in_meter:tracks[t]->out_meter, 16);
-
-                switch (transport) {
-                case ROLLING: mvprintw(0, 0, "rolling"); break;
-                case STOPPED: mvprintw(0, 0, "stopped"); break;
-                }
-                mvprintw(0, 10, "%5.1f s", (double)frame/frame_rate);
         }
+
+        switch (transport) {
+        case ROLLING: mvprintw(0, 0, "rolling"); break;
+        case STOPPED: mvprintw(0, 0, "stopped"); break;
+        }
+        mvprintw(0, 10, "%5.1f s", (double)frame/frame_rate);
+
         refresh();
 }
 
