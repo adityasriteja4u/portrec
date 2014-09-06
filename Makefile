@@ -2,9 +2,9 @@ CC = gcc
 
 .PHONY: all
 
-all: jackrec
+all: portrec
 
-jackrec: main.o audio.o track.o ui.o
+portrec: main.o audio.o track.o ui.o
 	$(CC) -Wall -o $@ $^ -lm -lpthread `pkg-config --libs portaudio-2.0 sndfile ncurses`
 
 %.o: %.c audio.h track.h ui.h
